@@ -1,52 +1,14 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import '../clients/omdb_rest_client.dart';
 import '../models/movie.dart';
 
 class OmdbService {
-  static const String _baseUrl = 'https://www.omdbapi.com/';
-  static const String _apiKey = '86ede769';
+  OmdbService()
+      : dio = Dio(),
+        client = RestClient(Dio());
 
-  // Search movies by title
-  Future<SearchResponse> searchMovies(String query, {int page = 1}) async {
-    try {
-      final url = Uri.parse('$_baseUrl?apikey=$_apiKey&s=$query&page=$page');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['Response'] == 'True') {
-          return SearchResponse.fromJson(data);
-        } else {
-          throw Exception(data['Error'] ?? 'Failed to search movies');
-        }
-      } else {
-        throw Exception('Failed to load movies');
-      }
-    } catch (e) {
-      throw Exception('Error searching movies: $e');
-    }
-  }
-
-  // Get movie details by IMDb ID
-  Future<Movie> getMovieDetails(String imdbId) async {
-    try {
-      final url = Uri.parse('$_baseUrl?apikey=$_apiKey&i=$imdbId&plot=full');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['Response'] == 'True') {
-          return Movie.fromJson(data);
-        } else {
-          throw Exception(data['Error'] ?? 'Failed to get movie details');
-        }
-      } else {
-        throw Exception('Failed to load movie details');
-      }
-    } catch (e) {
-      throw Exception('Error getting movie details: $e');
-    }
-  }
+  final Dio dio;
+  final RestClient client;
 
   // Get popular movies (using predefined search terms)
   Future<List<Movie>> getPopularMovies() async {
@@ -56,7 +18,7 @@ class OmdbService {
       final List<Movie> allMovies = [];
 
       for (var searchTerm in searches) {
-        final response = await searchMovies(searchTerm);
+        final response = await client.searchMovies(searchTerm, 1);
         allMovies.addAll(response.movies);
       }
 
@@ -75,10 +37,30 @@ class OmdbService {
   // Get movies by genre (using search term as proxy)
   Future<List<Movie>> getMoviesByGenre(String genre) async {
     try {
-      final response = await searchMovies(genre);
+      final response = await client.searchMovies(genre, 1);
       return response.movies;
     } catch (e) {
       throw Exception('Error getting movies by genre: $e');
+    }
+  }
+
+  // Search movies by title
+  Future<SearchResponse> searchMovies(String query, {int page = 1}) async {
+    try {
+      final response = await client.searchMovies(query, page);
+      return response;
+    } catch (e) {
+      throw Exception('Error searching movies: $e');
+    }
+  }
+
+  // // Get movie details by IMDb ID
+  Future<Movie> getMovieDetails(String imdbId) async {
+    try {
+      final response = await client.getMovieDetails(imdbId);
+      return response;
+    } catch (e) {
+      throw Exception('Error getting movie details: $e');
     }
   }
 }
