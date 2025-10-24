@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import '../clients/omdb_rest_client.dart';
 import '../models/movie.dart';
 
-class OmdbService {
-  OmdbService()
+class MovieRepository {
+  MovieRepository()
       : dio = Dio(),
         client = RestClient(Dio());
 

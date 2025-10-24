@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'bloc/movie_bloc.dart';
 import 'bloc/movie_event.dart';
 import 'screens/home_screen.dart';
-import 'services/omdb_service.dart';
+import 'repositories/movie_repository.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +29,7 @@ class OpenFlixApp extends StatelessWidget {
     return BlocProvider(
       create: (context) {
         // Create MovieBloc and immediately dispatch LoadPopularMovies event
-        final bloc = MovieBloc(omdbService: OmdbService());
+        final bloc = MovieBloc(movieRepository: MovieRepository());
         bloc.add(const LoadPopularMovies());
         return bloc;
       },

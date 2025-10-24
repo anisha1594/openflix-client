@@ -1,12 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../services/omdb_service.dart';
+import '../repositories/movie_repository.dart';
 import 'movie_event.dart';
 import 'movie_state.dart';
 
 class MovieBloc extends Bloc<MovieEvent, MovieState> {
-  final OmdbService omdbService;
+  final MovieRepository movieRepository;
 
-  MovieBloc({required this.omdbService}) : super(const MovieInitial()) {
+  MovieBloc({required this.movieRepository}) : super(const MovieInitial()) {
     on<LoadPopularMovies>(_onLoadPopularMovies);
     on<SearchMovies>(_onSearchMovies);
     on<LoadMovieDetails>(_onLoadMovieDetails);
@@ -20,7 +20,7 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
   ) async {
     emit(const MovieLoading());
     try {
-      final movies = await omdbService.getPopularMovies();
+      final movies = await movieRepository.getPopularMovies();
       emit(MovieLoaded(movies));
     } catch (e) {
       emit(MovieError(e.toString()));
@@ -38,7 +38,7 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
 
     emit(const MovieLoading());
     try {
-      final response = await omdbService.searchMovies(event.query);
+      final response = await movieRepository.searchMovies(event.query);
       emit(MovieSearchResults(response.movies, event.query));
     } catch (e) {
       emit(MovieError(e.toString()));
@@ -51,7 +51,7 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
   ) async {
     emit(const MovieLoading());
     try {
-      final movie = await omdbService.getMovieDetails(event.imdbId);
+      final movie = await movieRepository.getMovieDetails(event.imdbId);
       emit(MovieDetailsLoaded(movie));
     } catch (e) {
       emit(MovieError(e.toString()));
@@ -64,7 +64,7 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
   ) async {
     emit(const MovieLoading());
     try {
-      final movies = await omdbService.getMoviesByGenre(event.genre);
+      final movies = await movieRepository.getMoviesByGenre(event.genre);
       emit(MovieLoaded(movies));
     } catch (e) {
       emit(MovieError(e.toString()));

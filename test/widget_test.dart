@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openflix_client/main.dart';
 import 'package:openflix_client/bloc/movie_bloc.dart';
-import 'package:openflix_client/services/omdb_service.dart';
+import 'package:openflix_client/repositories/movie_repository.dart';
 
 void main() {
   testWidgets('OpenFlix app smoke test', (WidgetTester tester) async {
@@ -20,7 +20,7 @@ void main() {
   testWidgets('Search bar appears on home screen', (WidgetTester tester) async {
     await tester.pumpWidget(
       BlocProvider(
-        create: (context) => MovieBloc(omdbService: OmdbService()),
+        create: (context) => MovieBloc(movieRepository: MovieRepository()),
         child: const MaterialApp(home: Scaffold(body: Text('OpenFlix'))),
       ),
     );
