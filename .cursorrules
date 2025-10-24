@@ -1,0 +1,207 @@
+# OpenFlix Project Rules
+
+## Framework & Language
+- This is a Flutter/Dart project
+- Use Dart 3.0+ features
+- Follow Flutter best practices
+
+## State Management - MANDATORY
+- **ALWAYS use Bloc pattern** for state management
+- Never use setState for business logic or data state
+- Use flutter_bloc package (BlocProvider, BlocBuilder, BlocListener)
+
+## Bloc Pattern Guidelines
+
+### When Adding New Features:
+1. Create events in `lib/bloc/[feature]_event.dart`
+2. Create states in `lib/bloc/[feature]_state.dart`
+3. Implement bloc in `lib/bloc/[feature]_bloc.dart`
+4. Use BlocProvider in widgets
+5. Use BlocBuilder/BlocListener for UI updates
+
+### Event Naming:
+- Use verb-noun format: `LoadMovies`, `SearchMovies`, `UpdateUser`
+- Extend from base event class
+- Use Equatable for comparison
+
+### State Naming:
+- Use noun-adjective format: `MovieLoading`, `MovieLoaded`, `MovieError`
+- Extend from base state class
+- Use Equatable for comparison
+- Always include initial state
+
+### Bloc Implementation:
+```dart
+class FeatureBloc extends Bloc<FeatureEvent, FeatureState> {
+  final Service service;
+  
+  FeatureBloc({required this.service}) : super(FeatureInitial()) {
+    on<EventName>(_onEventName);
+  }
+  
+  Future<void> _onEventName(
+    EventName event,
+    Emitter<FeatureState> emit,
+  ) async {
+    emit(FeatureLoading());
+    try {
+      final data = await service.fetchData();
+      emit(FeatureLoaded(data));
+    } catch (e) {
+      emit(FeatureError(e.toString()));
+    }
+  }
+}
+```
+
+### Widget Usage:
+```dart
+// Providing Bloc
+BlocProvider(
+  create: (context) => FeatureBloc(service: Service()),
+  child: ChildWidget(),
+)
+
+// Consuming Bloc
+BlocBuilder<FeatureBloc, FeatureState>(
+  builder: (context, state) {
+    if (state is FeatureLoading) return LoadingWidget();
+    if (state is FeatureLoaded) return DataWidget(state.data);
+    if (state is FeatureError) return ErrorWidget(state.message);
+    return InitialWidget();
+  },
+)
+
+// Dispatching Events
+context.read<FeatureBloc>().add(EventName());
+```
+
+## Project Structure
+- `lib/bloc/` - All Bloc files (events, states, blocs)
+- `lib/models/` - Data models
+- `lib/services/` - API services
+- `lib/screens/` - Full page widgets
+- `lib/widgets/` - Reusable UI components
+- `lib/utils/` - Constants, helpers
+
+## Code Style
+
+### StatefulWidget vs StatelessWidget:
+- Use StatefulWidget ONLY for:
+  - TextEditingController
+  - AnimationController
+  - FocusNode
+  - Local UI state (expand/collapse, tabs)
+  - initState/dispose lifecycle
+- Use StatelessWidget + Bloc for everything else
+
+### API Calls:
+- All API calls in `lib/services/`
+- Always return Future<T>
+- Use async/await
+- Include proper error handling
+
+### Models:
+- Use Equatable for all models
+- Include fromJson/toJson methods
+- Use const constructors when possible
+
+### Widgets:
+- Use const constructors wherever possible
+- Extract reusable widgets to `lib/widgets/`
+- Keep build methods clean and readable
+- Max 300 lines per file (split if larger)
+
+## Dependencies
+- flutter_bloc: ^8.1.3 - State management
+- equatable: ^2.0.5 - Value equality
+- http: ^1.1.0 - API calls
+- cached_network_image: ^3.3.0 - Image caching
+- google_fonts: ^6.1.0 - Typography
+
+## Error Handling
+- Always use try-catch in Bloc
+- Emit error states with descriptive messages
+- Show user-friendly error messages in UI
+- Include retry functionality
+
+## Best Practices
+- Single Responsibility Principle
+- Don't repeat yourself (DRY)
+- Prefer composition over inheritance
+- Use meaningful variable names
+- Add comments for complex logic
+- Keep functions small and focused
+
+## UI/UX Guidelines
+- Material Design 3
+- Dark theme (Netflix-style)
+- Smooth animations
+- Loading states for all async operations
+- Error states with retry buttons
+- Empty states with helpful messages
+
+## Testing
+- Write unit tests for Blocs
+- Test all event handlers
+- Test state transitions
+- Mock services in tests
+
+## When Generating Code:
+1. Check if feature needs new Bloc or extends existing
+2. Create events/states/bloc files if needed
+3. Update existing Bloc if extending functionality
+4. Use BlocBuilder in UI
+5. Never use setState for data fetching
+6. Always emit loading state before async operations
+7. Always handle errors with error states
+
+## Common Patterns
+
+### Pagination:
+```dart
+on<LoadMoreMovies>((event, emit) async {
+  if (state is MovieLoaded) {
+    final currentMovies = (state as MovieLoaded).movies;
+    emit(MovieLoadingMore(currentMovies));
+    try {
+      final newMovies = await service.getMovies(page: event.page);
+      emit(MovieLoaded([...currentMovies, ...newMovies]));
+    } catch (e) {
+      emit(MovieError(e.toString()));
+    }
+  }
+});
+```
+
+### Debounced Search:
+```dart
+on<SearchMovies>(
+  (event, emit) async {
+    emit(MovieLoading());
+    final results = await service.search(event.query);
+    emit(MovieSearchResults(results));
+  },
+  transformer: debounce(Duration(milliseconds: 300)),
+);
+```
+
+## Never Do:
+- ❌ Don't use Provider for app state
+- ❌ Don't use setState for API data
+- ❌ Don't put business logic in widgets
+- ❌ Don't make API calls directly from widgets
+- ❌ Don't forget to dispose controllers
+- ❌ Don't ignore error states
+- ❌ Don't use mutable state in Bloc
+
+## Always Do:
+- ✅ Use Bloc for all data state
+- ✅ Use const constructors
+- ✅ Dispose controllers in StatefulWidgets
+- ✅ Handle loading/error/success states
+- ✅ Keep widgets focused and simple
+- ✅ Extract complex logic to services
+- ✅ Use meaningful names
+- ✅ Add proper error handling
+
