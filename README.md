@@ -2,6 +2,8 @@
 
 A beautiful Netflix-inspired Flutter application built with **Bloc** state management and powered by the **OMDB API**.
 
+Web App is hosted [here](https://anisha1594.github.io/openflix-client/)
+
 ## Features
 
 ✨ **Modern Netflix-like UI**
