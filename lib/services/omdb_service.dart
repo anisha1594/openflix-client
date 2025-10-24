@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/movie.dart';
 
 class OmdbService {
-  static const String _baseUrl = 'http://www.omdbapi.com/';
+  static const String _baseUrl = 'https://www.omdbapi.com/';
   static const String _apiKey = '86ede769';
 
   // Search movies by title
