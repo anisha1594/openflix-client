@@ -1,105 +1,91 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/movie_bloc.dart';
+import '../bloc/movie_event.dart';
+import '../bloc/movie_state.dart';
 
-class SearchAppBar extends StatefulWidget {
-  final Function(String) onSearch;
-  final VoidCallback onClear;
+class SearchAppBar extends StatelessWidget {
+  const SearchAppBar({super.key});
 
-  const SearchAppBar({
-    super.key,
-    required this.onSearch,
-    required this.onClear,
-  });
-
-  @override
-  State<SearchAppBar> createState() => _SearchAppBarState();
-}
-
-class _SearchAppBarState extends State<SearchAppBar> {
-  final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _handleSearch(String query) {
+  void _handleSearch(BuildContext context, String query) {
     if (query.isNotEmpty) {
-      widget.onSearch(query);
+      context.read<MovieBloc>().add(SearchMovies(query));
     }
   }
 
-  void _handleClear() {
-    _searchController.clear();
-    setState(() {
-      _isSearching = false;
-    });
-    widget.onClear();
+  void _handleClear(BuildContext context) {
+    context.read<MovieBloc>().add(const ClearSearch());
   }
 
-  void _toggleSearch() {
-    setState(() {
-      _isSearching = true;
-    });
+  void _toggleSearch(BuildContext context) {
+    context.read<MovieBloc>().add(const ToggleSearchMode());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          if (!_isSearching)
-            const Text(
-              'OpenFlix',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          const Spacer(),
-          if (_isSearching)
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                autofocus: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Search movies...',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[900],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.grey),
-                    onPressed: _handleClear,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+    return BlocBuilder<MovieBloc, MovieState>(
+      builder: (context, state) {
+        final isSearching = state.isSearching;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              if (!isSearching)
+                const Text(
+                  'OpenFlix',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                onSubmitted: _handleSearch,
-                onChanged: (value) {
-                  if (value.isEmpty) {
-                    _handleClear();
-                  }
-                },
-              ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.search, color: Colors.white, size: 28),
-              onPressed: _toggleSearch,
-            ),
-        ],
-      ),
+              const Spacer(),
+              if (isSearching)
+                Expanded(
+                  child: TextField(
+                    key: const Key('search_text_field'),
+                    autofocus: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Search movies...',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      filled: true,
+                      fillColor: Colors.grey[900],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () => _handleClear(context),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    onSubmitted: (query) => _handleSearch(context, query),
+                    onChanged: (value) {
+                      if (value.isEmpty) {
+                        _handleClear(context);
+                      } else {
+                        // Emit event for each text change
+                        context.read<MovieBloc>().add(SearchTextChanged(value));
+                      }
+                    },
+                  ),
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.search, color: Colors.white, size: 28),
+                  onPressed: () => _toggleSearch(context),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -25,16 +25,6 @@ class HomeScreen extends StatelessWidget {
     return movies.where((m) => m.type == type).toList();
   }
 
-  void _handleSearch(BuildContext context, String query) {
-    // Dispatch SearchMovies event to Bloc
-    context.read<MovieBloc>().add(SearchMovies(query));
-  }
-
-  void _handleClear(BuildContext context) {
-    // Dispatch ClearSearch event to Bloc
-    context.read<MovieBloc>().add(const ClearSearch());
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,11 +32,8 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Search Bar - Extracted to separate widget
-            SearchAppBar(
-              onSearch: (query) => _handleSearch(context, query),
-              onClear: () => _handleClear(context),
-            ),
+            // Search Bar - Now directly communicates with Bloc
+            const SearchAppBar(),
 
             // Content
             Expanded(

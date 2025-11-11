@@ -2,55 +2,57 @@ import 'package:equatable/equatable.dart';
 import '../models/movie.dart';
 
 abstract class MovieState extends Equatable {
-  const MovieState();
+  final bool isSearching;
+  
+  const MovieState({this.isSearching = false});
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [isSearching];
 }
 
 class MovieInitial extends MovieState {
-  const MovieInitial();
+  const MovieInitial({super.isSearching});
 }
 
 class MovieLoading extends MovieState {
-  const MovieLoading();
+  const MovieLoading({super.isSearching});
 }
 
 class MovieLoaded extends MovieState {
   final List<Movie> movies;
 
-  const MovieLoaded(this.movies);
+  const MovieLoaded(this.movies, {super.isSearching});
 
   @override
-  List<Object?> get props => [movies];
+  List<Object?> get props => [movies, isSearching];
 }
 
 class MovieDetailsLoaded extends MovieState {
   final Movie movie;
 
-  const MovieDetailsLoaded(this.movie);
+  const MovieDetailsLoaded(this.movie, {super.isSearching});
 
   @override
-  List<Object?> get props => [movie];
+  List<Object?> get props => [movie, isSearching];
 }
 
 class MovieError extends MovieState {
   final String message;
 
-  const MovieError(this.message);
+  const MovieError(this.message, {super.isSearching});
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, isSearching];
 }
 
 class MovieSearchResults extends MovieState {
   final List<Movie> movies;
   final String query;
 
-  const MovieSearchResults(this.movies, this.query);
+  const MovieSearchResults(this.movies, this.query) : super(isSearching: true);
 
   @override
-  List<Object?> get props => [movies, query];
+  List<Object?> get props => [movies, query, isSearching];
 }
 
 

@@ -12,18 +12,21 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
     on<LoadMovieDetails>(_onLoadMovieDetails);
     on<LoadMoviesByGenre>(_onLoadMoviesByGenre);
     on<ClearSearch>(_onClearSearch);
+    on<SearchTextChanged>(_onSearchTextChanged);
+    on<ToggleSearchMode>(_onToggleSearchMode);
   }
 
   Future<void> _onLoadPopularMovies(
     LoadPopularMovies event,
     Emitter<MovieState> emit,
   ) async {
-    emit(const MovieLoading());
+    final currentSearching = state.isSearching;
+    emit(MovieLoading(isSearching: currentSearching));
     try {
       final movies = await movieRepository.getPopularMovies();
-      emit(MovieLoaded(movies));
+      emit(MovieLoaded(movies, isSearching: currentSearching));
     } catch (e) {
-      emit(MovieError(e.toString()));
+      emit(MovieError(e.toString(), isSearching: currentSearching));
     }
   }
 
@@ -32,16 +35,16 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
     Emitter<MovieState> emit,
   ) async {
     if (event.query.isEmpty) {
-      emit(const MovieInitial());
+      emit(const MovieInitial(isSearching: true));
       return;
     }
 
-    emit(const MovieLoading());
+    emit(const MovieLoading(isSearching: true));
     try {
       final response = await movieRepository.searchMovies(event.query);
       emit(MovieSearchResults(response.movies, event.query));
     } catch (e) {
-      emit(MovieError(e.toString()));
+      emit(MovieError(e.toString(), isSearching: true));
     }
   }
 
@@ -62,12 +65,13 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
     LoadMoviesByGenre event,
     Emitter<MovieState> emit,
   ) async {
-    emit(const MovieLoading());
+    final currentSearching = state.isSearching;
+    emit(MovieLoading(isSearching: currentSearching));
     try {
       final movies = await movieRepository.getMoviesByGenre(event.genre);
-      emit(MovieLoaded(movies));
+      emit(MovieLoaded(movies, isSearching: currentSearching));
     } catch (e) {
-      emit(MovieError(e.toString()));
+      emit(MovieError(e.toString(), isSearching: currentSearching));
     }
   }
 
@@ -75,8 +79,48 @@ class MovieBloc extends Bloc<MovieEvent, MovieState> {
     ClearSearch event,
     Emitter<MovieState> emit,
   ) async {
-    emit(const MovieInitial());
+    emit(const MovieInitial(isSearching: false));
     add(const LoadPopularMovies());
+  }
+
+  Future<void> _onSearchTextChanged(
+    SearchTextChanged event,
+    Emitter<MovieState> emit,
+  ) async {
+    // This event can be used for debounced search in the future
+    // For now, just trigger search if text is not empty
+    if (event.text.isNotEmpty) {
+      add(SearchMovies(event.text));
+    }
+  }
+
+  void _onToggleSearchMode(
+    ToggleSearchMode event,
+    Emitter<MovieState> emit,
+  ) {
+    // Toggle search mode while preserving the current state data
+    if (state is MovieLoaded) {
+      final currentState = state as MovieLoaded;
+      emit(MovieLoaded(currentState.movies, isSearching: true));
+    } else if (state is MovieInitial) {
+      emit(const MovieInitial(isSearching: true));
+    } else {
+      // For other states, just toggle the flag
+      emit(_copyStateWithSearching(state, true));
+    }
+  }
+
+  MovieState _copyStateWithSearching(MovieState state, bool isSearching) {
+    if (state is MovieLoaded) {
+      return MovieLoaded(state.movies, isSearching: isSearching);
+    } else if (state is MovieError) {
+      return MovieError(state.message, isSearching: isSearching);
+    } else if (state is MovieLoading) {
+      return MovieLoading(isSearching: isSearching);
+    } else if (state is MovieInitial) {
+      return MovieInitial(isSearching: isSearching);
+    }
+    return state;
   }
 }
 

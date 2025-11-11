@@ -42,4 +42,16 @@ class ClearSearch extends MovieEvent {
   const ClearSearch();
 }
 
+class SearchTextChanged extends MovieEvent {
+  final String text;
+  const SearchTextChanged(this.text);
+
+  @override
+  List<Object?> get props => [text];
+}
+
+class ToggleSearchMode extends MovieEvent {
+  const ToggleSearchMode();
+}
+
 
